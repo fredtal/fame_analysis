@@ -13,14 +13,26 @@
 
 #rm(list=ls())
 
-#for testing
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/testing"
+# importdir = where you have the files you want to sync
+importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files-ALL-trimmed"
+
+# dataexportdir = where you want to dump the csv end product
 dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/Talia code (graphs and stats)/MagBay analysis/data-exported"
 
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files-ALL-trimmed"
-dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/Talia code (graphs and stats)/MagBay analysis/data-exported"
+# codedir = where you have the 2 functions below stored.
 codedir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/Talia code (graphs and stats)/MagBay analysis/code"
 
+# Import function to calculate retention time windows
+# (This function sets the window around a given peak to be the default window.
+#  If that window runs into another peak window, the function resets the window
+#  to equal half the difference.)
+source(paste(codedir, "calculate.RT.windows.R", sep="/"))
+defaultwindow <- 0.8 #defaultwindow ----    
+
+# Import function to match peaks
+source(paste(codedir, "match.peaks.R", sep="/"))
+
+# set the peak threshold (drop all peaks smaller than this threshold)
 peakthreshold <- 0.5
 
 # ------------------ #
@@ -198,9 +210,6 @@ for(i in 1:length(filenames)) {
     rownames(peaklist) <- 1:nrow(peaklist)
     
     #run the calculate.RT.windows function on the peak list ----
-    source(paste(codedir, "calculate.RT.windows.R", sep="/"))
-    defaultwindow <- 0.8 #defaultwindow ----
-    
     peaklist <- calculate.RT.windows(datatable=peaklist, 
                                      defaultwindow=defaultwindow)
     
@@ -209,7 +218,6 @@ for(i in 1:length(filenames)) {
   } else { #if(i>1) { 
     
     #  a. Match the peaks to the peak list ----
-    source(paste(codedir, "match.peaks.R", sep="/"))
     thisfile <- match.peaks(thisfile, peaklist)
     
   #  b. Deal with the unmatched peaks ----
