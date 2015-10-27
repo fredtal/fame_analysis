@@ -1,9 +1,12 @@
-#for every peak on the master list, 
-#see if it can be found in the list of peaks to match
-#and modify the original file accordingly
+# -------------- #
+# Function: match.peaks
+# Input: a file of GC data to match, master list of peaks, and a flag to indicate if this is the last round of matching or not
+# Output: that same file of GC data with each peak matched to the master list
+# -------------- #
+# for every peak on the master list, 
+# see if it can be found GC file, and if so, add it in
+# -------------- #
 
-#match.peaks <- function(listofpeakstomatch, masterlist, origfile, 
-#                        matchtostandardlist=FALSE, lastmatch=FALSE) {
 match.peaks <- function(file, masterlist, lastmatch=FALSE) {
   
   if(!"fameid" %in% colnames(file)) { #if the fameid column doesn't exist yet
@@ -12,7 +15,6 @@ match.peaks <- function(file, masterlist, lastmatch=FALSE) {
   }
   
   for(k in 1:(nrow(masterlist))) { #for each of the peaks in the masterlist
-#  for(k in 1:7) { #for each of the peaks in the masterlist
       #see if there are any matches in the list of peaks to match
       #we have to do it this way because 
       #otherwise, sometimes two or more peaks will match to a peak in the masterlist
