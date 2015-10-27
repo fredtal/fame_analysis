@@ -1,2 +1,2 @@
 # fame_analysis
-Processing fatty acid methyl ester data from a gas chromatography machine
+This code processes fatty acid methyl ester (FAME) data from a gas chromatography (GC) machine.  
