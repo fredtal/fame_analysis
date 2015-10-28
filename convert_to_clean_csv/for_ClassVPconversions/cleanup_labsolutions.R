@@ -10,8 +10,8 @@
 
 # text files ----
 
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files from LS"
-exportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files from LS-without header"
+importdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/original data/csv files (converted, messy)"
+exportdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/original data/csv files (clean)"
 
 #make the list of files you want to import
 filelist <- list.files(importdir)

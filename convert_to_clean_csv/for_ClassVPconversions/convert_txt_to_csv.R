@@ -5,12 +5,12 @@
 # ------------------ #
 
 #rm(list=ls())
-require(stringr)
+library(stringr)
 
 # text files ----
 
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/txt files"
-exportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/txt-to-csv"
+importdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/txt files (original)"
+exportdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/csv files (converted, messy)"
 
 #make the list of files you want to import
 filelist <- list.files(importdir)
@@ -33,6 +33,6 @@ for(i in 1:length(filelist)) {
   rm(file, pieces)
 }
 
-rm(importdir, exportdir, filelist)
+rm(importdir, exportdir, filelist, i)
 
 
