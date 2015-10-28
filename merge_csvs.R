@@ -11,16 +11,18 @@
 # Output: single csv file with semi-synced peaks
 # ------------------ #
 
+# ** Note: don't run blanks through this script.  they don't have palmitic acid, so will barf.
+
 #rm(list=ls())
 
 # importdir = where you have the files you want to sync
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files-ALL-trimmed"
+importdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/5.csv files (rt, ap only)"
 
 # dataexportdir = where you want to dump the csv end product
-dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/Talia code (graphs and stats)/MagBay analysis/data-exported"
+dataexportdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data"
 
 # codedir = where you have the 2 functions below stored.
-codedir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/Talia code (graphs and stats)/MagBay analysis/code"
+codedir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/fame_analysis/functions"
 
 # Import function to calculate retention time windows
 # (This function sets the window around a given peak to be the default window.
@@ -33,7 +35,7 @@ defaultwindow <- 0.8 #defaultwindow ----
 source(paste(codedir, "match.peaks.R", sep="/"))
 
 # set the peak threshold (drop all peaks smaller than this threshold)
-peakthreshold <- 0.5
+#peakthreshold <- 0.5
 
 # ------------------ #
 #  1. Import files, ids, and species -----
@@ -43,10 +45,10 @@ peakthreshold <- 0.5
 filenames <- list.files(importdir)
 
 #get list of ids and sp
-#pieces <- strsplit(filenames, "[_.]+")
+pieces <- strsplit(filenames, "[_.]+")
 #idvec <- sapply(pieces, "[", 1)
-#spvec <- sapply(pieces, "[", 2)
-#rm(pieces)
+spvec <- sapply(pieces, "[", 2)
+rm(pieces)
 
 #make list of files
 filevec <- vector(mode="list", length(filenames))
@@ -58,12 +60,6 @@ for(i in 1:(length(filenames))) {
                             stringsAsFactors=FALSE)
 } 
 rm(i)
-#spuniq <- sort(unique(spvec))
-
-#do together: squid, sharks, stm, dolphinfish, flying fish
-
-#check species
-#calculate 
 
 # ------------------ #
 # Algorithm! ----
@@ -161,17 +157,18 @@ for(i in 1:length(filenames)) {
     rownames(thisfile) <- 1:nrow(thisfile) #renumber
     #recalculate the area percents without the c19 peak.  
     thisfile$ap <- thisfile$ap / sum(thisfile$ap) * 100
+    rm(c19index)
   }  
-  rm(c19, c19index)
+  rm(c19)
   
   # ------------------ #
   #  4. Remove small peaks  ----
   # ------------------ #
-  #remove all peaks < 0.2%
-  thisfile <- thisfile[thisfile$ap > peakthreshold,]
+  #remove all peaks < peakthreshold, which is set at top
+#  thisfile <- thisfile[thisfile$ap > peakthreshold,]
   
   #renumber the rows!  so you can call the indices later.  
-  rownames(thisfile) <- 1:nrow(thisfile)
+#  rownames(thisfile) <- 1:nrow(thisfile)
   #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme
   
   
@@ -265,7 +262,6 @@ rm(i)
 # III. Now match each file to the master peak list ----
 # ------------------ #
 
-#for(i in 1:3) {
 for(i in 1:length(filenames)) {
   thisfile2<- filevec2[[i]]
   
@@ -376,33 +372,15 @@ apdfpcolindices <- sort(union(grep("ap", colnames(alldata)),
 APDFP <- alldata[, apdfpcolindices] 
 rm(apdfpcolindices)
 
-#get ids for species matching
-splitnames <- strsplit(colnames(APDFP), ".", fixed=TRUE) #split on period
-idsonly <- sapply(splitnames, "[[", 2)
-idsonly <- idsonly[2:length(idsonly)] #remove the "base" column name for species matching below
-#thank you: http://stackoverflow.com/questions/2803460/how-to-get-the-second-sub-element-of-every-element-in-a-list-in-r#then rename the columns
-rm(splitnames)
-
-id_sp_batch <- read.csv("~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/Talia code (graphs and stats)/MagBay analysis/data-to import/id_species_batchnum.csv", 
-                        stringsAsFactor=F)
-id_sp <- id_sp_batch[c("fish_id", "common_name")]
-
-# match ids to species
-idsonlydf <- as.data.frame(idsonly, stringsAsFactors=F) #from the APs
-id_sp_match <- merge(idsonlydf, id_sp, by.x="idsonly", by.y="fish_id", all.x=T)
-#id_sp_match[is.na(id_sp_match$common_name),] #check to see if they all matched
-#rm(idsonlydf)
-sp <- id_sp_match$common_name#make a column of just the species, so the col name is right later.  
-sp <- c("", id_sp_match$common_name) #add a blank at the front for the "base" column
-
 #bind the species to the APs
 #it's just easier for me to do the sort vertically, so i am transposing and and then retransposing it
+sp <- c("sp", rep(spvec, each=2)) #one for ap, dfp
 APDFPt <- t(APDFP)
 APDFPt <- cbind.data.frame(sp, APDFPt)
 APDFPtsp <- APDFPt[with(APDFPt, order(sp)), ]
 APDFP <- t(APDFPtsp)
 write.csv(APDFP, paste(dataexportdir, "APDFP.csv", sep="/"), row.names=F)
 
-
-
-
+rm(spvec, sp)
+#rm(alldata, peaklist, APDFP, APDFPt, APDFPtsp, filenames, filevec, filevec2)
+#rm(codedir, dataexportdir, importdir)
