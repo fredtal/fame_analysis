@@ -374,7 +374,7 @@ rm(apdfpcolindices)
 
 #bind the species to the APs
 #it's just easier for me to do the sort vertically, so i am transposing and and then retransposing it
-sp <- c("sp", rep(spvec, each=2)) #one for ap, dfp
+sp <- c("base", rep(spvec, each=2)) #one for ap, dfp
 APDFPt <- t(APDFP)
 APDFPt <- cbind.data.frame(sp, APDFPt)
 APDFPtsp <- APDFPt[with(APDFPt, order(sp)), ]
