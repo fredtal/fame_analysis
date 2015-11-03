@@ -16,10 +16,10 @@
 #rm(list=ls())
 
 # importdir = where you have the files you want to sync
-importdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/5.csv files (rt, ap only)"
+importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data/GC data-clean/csv files-ALL-trimmed"
 
 # dataexportdir = where you want to dump the csv end product
-dataexportdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data"
+dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/MagBay analysis/data-exported"
 
 # codedir = where you have the 2 functions below stored.
 codedir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/fame_analysis/functions"
@@ -36,6 +36,9 @@ source(paste(codedir, "match.peaks.R", sep="/"))
 
 # set the peak threshold (drop all peaks smaller than this threshold)
 #peakthreshold <- 0.5
+
+# set target num peaks (all files should be pared to ~this target number of peaks, to get comparable resolution)
+targetpeaknum <- 50
 
 # ------------------ #
 #  1. Import files, ids, and species -----
@@ -60,6 +63,12 @@ for(i in 1:(length(filenames))) {
                             stringsAsFactors=FALSE)
 } 
 rm(i)
+
+# make table for peakcounts
+peakcounts <- data.frame(matrix(nrow=length(filenames), ncol=3))
+colnames(peakcounts) <- c("file_name", "num_peaks", "peak_threshold")
+
+
 
 # ------------------ #
 # Algorithm! ----
@@ -170,8 +179,32 @@ for(i in 1:length(filenames)) {
   #renumber the rows!  so you can call the indices later.  
 #  rownames(thisfile) <- 1:nrow(thisfile)
   #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme
+
+  # ------------------ #
+  #  4. Remove extra peaks in files with a lot of them  ----
+  # ------------------ #
+  # remove peaks with 0 ap
+  thisfile <- thisfile[thisfile$ap!=0,]  
+  rownames(thisfile) <- 1:nrow(thisfile)
   
-  
+  peakcounts$file_name[i] <- filenames[i]
+  peakcounts$num_peaks[i] <- nrow(thisfile)
+
+  # we want to get all the files to a similar resolution, to have about the same number of peaks
+  # the target number of peaks is set above
+  if(nrow(thisfile)>(1.5*targetpeaknum)){ #only pare peaks if the file has > 1.5*targetnumpeaks
+    #find a threshold that gives us the right number
+    peakthreshold <- sort(thisfile$ap, decreasing=T)[1.5*targetpeaknum] #cutoff is the ap where the peaknum = 1.5*targetnumpeaks
+    numpeaksremoved <- length(thisfile$ap[thisfile$ap<=peakthreshold])
+    thisfile <- thisfile[thisfile$ap >= peakthreshold,] #remove all peaks below that threshold
+    peakcounts$peak_threshold[i] <- peakthreshold #save the peakthreshold so you can look at it later
+    #renumber the rows!  so you can call the indices later.  
+    rownames(thisfile) <- 1:nrow(thisfile)
+    #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme    
+    rm(peakthreshold)
+  }
+
+ 
   # ------------------ #
   #  5. Now, generate list of all peaks  ----
   # ------------------ #
@@ -255,6 +288,9 @@ for(i in 1:length(filenames)) {
 } #i in 1:filenames
 rm(defaultwindow)
 rm(i)
+
+peakcounts <- peakcounts[with(peakcounts, order(num_peaks)),]
+write.csv(peakcounts, paste(dataexportdir, "peakcounts.csv", sep="/"), row.names=F)
 
 
 
