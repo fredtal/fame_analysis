@@ -17,9 +17,11 @@
 
 # importdir = where you have the files you want to sync
 importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data/GC data-clean/csv files-ALL-trimmed"
+#importdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/5.csv files (rt, ap only)"
 
 # dataexportdir = where you want to dump the csv end product
 dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/MagBay analysis/data-exported"
+#dataexportdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112"
 
 # codedir = where you have the 2 functions below stored.
 codedir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/fame_analysis/functions"
@@ -33,9 +35,6 @@ defaultwindow <- 0.8 #defaultwindow ----
 
 # Import function to match peaks
 source(paste(codedir, "match.peaks.R", sep="/"))
-
-# set the peak threshold (drop all peaks smaller than this threshold)
-#peakthreshold <- 0.5
 
 # set target num peaks (all files should be pared to ~this target number of peaks, to get comparable resolution)
 targetpeaknum <- 50
@@ -65,9 +64,8 @@ for(i in 1:(length(filenames))) {
 rm(i)
 
 # make table for peakcounts
-peakcounts <- data.frame(matrix(nrow=length(filenames), ncol=3))
-colnames(peakcounts) <- c("file_name", "num_peaks", "peak_threshold")
-
+peakcounts <- data.frame(matrix(nrow=length(filenames), ncol=9))
+colnames(peakcounts) <- c("file_name", "num_peaks", "peak_threshold", "palmitic_rt", "palmitic_ap", "c19_rt", "c19_dfp", "c19_ap", "notes")
 
 
 # ------------------ #
@@ -124,11 +122,17 @@ for(i in 1:length(filenames)) {
   #check to make sure it's reasonable that this peak is actually palmitic acid
   palmiticap <- thisfile$ap[palmiticind]
   palmiticrt <- thisfile$rt[palmiticind]
-  if(palmiticap < 10) print (paste("WARNING!: The palmitic peak is only", 
-                                   round(palmiticap, digits=2), "% of area."))
-  if(palmiticrt < 21 | palmiticrt > 23) 
-    print (paste("WARNING!: The palmitic retention time is", 
-                 palmiticrt, "and not between 21 and 23 minutes."))
+  peakcounts$palmitic_ap[i] <- palmiticap
+  peakcounts$palmitic_rt[i] <- palmiticrt
+  #print(paste0("  Palmitic acid is ", round(palmiticap, digits=1), "%, at ", round(palmiticrt, digits=2), " minutes."))
+  if(palmiticap < 10) {
+    #print(paste("  WARNING!: The palmitic peak is only", round(palmiticap, digits=2), "% of area."))
+    peakcounts$notes[i]  <- paste("WARNING!: The palmitic peak is only", round(palmiticap, digits=2), "% of area.")
+} #if pap <10
+  if(palmiticrt < 21 | palmiticrt > 23) {
+    #print(paste("WARNING!: The palmitic retention time is", palmiticrt, "and not between 21 and 23 minutes."))
+    peakcounts$notes[i]  <- paste(peakcounts$notes[i], "WARNING!: The palmitic peak is only", round(palmiticap, digits=2), "% of area.")
+  }
   rm(palmiticind, palmiticap)
            
   #create a column that is distance from palmitic acid
@@ -157,11 +161,15 @@ for(i in 1:length(filenames)) {
     #If there's more than one, take the bigger one
     print("Note: there's more than one peak bigger than 4% in the C19 range between 7.5 and 8.5.")
     print(c19)
-    c19 <- c19[which.max(c19$Areapercent),]
+    c19 <- c19[which.max(c19$Areapercent),] #set c19 to the biggest peak in that range
+    peakcounts$notes[i] <- paste(peakcounts$notes[i], "Note: there's more than one peak bigger than 4% in the C19 range between 7.5 and 8.5.")
   }   
   #then, remove the row.  
   if(nrow(c19)==1) {
     c19index <- as.numeric(rownames(c19))
+    peakcounts$c19_rt[i] <- c19$rt
+    peakcounts$c19_ap[i] <- c19$ap
+    peakcounts$c19_dfp[i] <- c19$dfp
     thisfile <- thisfile[-c19index,] #remove the line
     rownames(thisfile) <- 1:nrow(thisfile) #renumber
     #recalculate the area percents without the c19 peak.  
@@ -197,12 +205,13 @@ for(i in 1:length(filenames)) {
     peakthreshold <- sort(thisfile$ap, decreasing=T)[1.5*targetpeaknum] #cutoff is the ap where the peaknum = 1.5*targetnumpeaks
     numpeaksremoved <- length(thisfile$ap[thisfile$ap<=peakthreshold])
     thisfile <- thisfile[thisfile$ap >= peakthreshold,] #remove all peaks below that threshold
+    thisfile$ap <- thisfile$ap / sum(thisfile$ap) * 100
     peakcounts$peak_threshold[i] <- peakthreshold #save the peakthreshold so you can look at it later
-    #renumber the rows!  so you can call the indices later.  
+#    #renumber the rows!  so you can call the indices later.  
     rownames(thisfile) <- 1:nrow(thisfile)
-    #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme    
+#    #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme    
     rm(peakthreshold)
-  }
+  } #targetpeaknum
 
  
   # ------------------ #
@@ -286,8 +295,8 @@ for(i in 1:length(filenames)) {
   rm(thisfile)
   
 } #i in 1:filenames
-rm(defaultwindow)
 rm(i)
+rm(defaultwindow)
 
 peakcounts <- peakcounts[with(peakcounts, order(num_peaks)),]
 write.csv(peakcounts, paste(dataexportdir, "peakcounts.csv", sep="/"), row.names=F)
@@ -412,11 +421,28 @@ rm(apdfpcolindices)
 #it's just easier for me to do the sort vertically, so i am transposing and and then retransposing it
 sp <- c("base", rep(spvec, each=2)) #one for ap, dfp
 APDFPt <- t(APDFP)
-APDFPt <- cbind.data.frame(sp, APDFPt)
-APDFPtsp <- APDFPt[with(APDFPt, order(sp)), ]
-APDFP <- t(APDFPtsp)
-write.csv(APDFP, paste(dataexportdir, "APDFP.csv", sep="/"), row.names=F)
+APDFPtsp <- cbind.data.frame(sp, APDFPt)
+#APDFPtsp <- APDFPt[with(APDFPt, order(sp)), ] #sort by species
 
-rm(spvec, sp)
+#group species in similar groups
+spcat <- read.csv("~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/MagBay analysis/data manipulation I did/spveccat.csv")
+APDFPtsp$header <- rownames(APDFPtsp)
+APDFPtsp$cat <- spcat$cat[match(APDFPtsp$sp, spcat$sp)]
+APDFPtsp <- APDFPtsp[,c("cat", "sp", "header", 
+                        colnames(APDFPtsp)[!colnames(APDFPtsp) %in% c("cat", "sp", "header")])] #reorder columns
+toprow <- APDFPtsp[1,] #separate out base from other rows
+under <- APDFPtsp[2:nrow(APDFPtsp),] 
+under <- under[with(under, order(cat, sp)),] #sort by cat and sp
+APDFPtsp <- rbind(toprow, under) #reassemble
+APDFPtsp[APDFPtsp==0] <- NA #replace 0s with NAs
+rm(toprow, under)
+
+APDFP <- t(APDFPtsp)
+write.table(APDFP, paste(dataexportdir, "APDFP.csv", sep="/"), sep=",", na="", row.names=F, col.names=F) #write table allows setting col.names=F
+
+
+rm(spvec, sp, spcat)
 #rm(alldata, peaklist, APDFP, APDFPt, APDFPtsp, filenames, filevec, filevec2)
 #rm(codedir, dataexportdir, importdir)
+
+#write.csv(sort(unique(spvec)), paste(dataexportdir, "spvec.csv", sep="/"))
