@@ -5,6 +5,7 @@
 #
 # This script cleans up the data files as they come direct from the GC.  
 # You only need to run it once.
+# It works for files from ClassVP and also from LabSolutions.  
 #
 # Input: it imports everything in one directory
 # Output: it spits out correctly formatted csv files in another directory. 
@@ -21,8 +22,8 @@ Sys.setlocale('LC_ALL','C')
 #http://r.789695.n4.nabble.com/Strings-from-different-locale-td3023176.html
 
 # set directories
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files-ALL-original"
-exportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data and reports/GC data-cleaned/reports-all, organized by file type/csv files-ALL-trimmed"
+importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data/GC data-clean/csv files-various/csv files-ALL-original"
+exportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data/GC data-clean/csv files-various/csv files-nov15-trimmed"
 
 # generate list of files
 filelist <- list.files(importdir)
@@ -119,4 +120,11 @@ for(i in 1:length(filelist)) {
 #rm(i)
 #rm(importdir, exportdir)
   
-  
+
+
+
+
+
+
+
+
