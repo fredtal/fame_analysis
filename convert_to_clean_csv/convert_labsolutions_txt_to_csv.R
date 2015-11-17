@@ -26,20 +26,20 @@ library(stringr)
 # ------------ #
 # You need to set up 5 directories, one with the original files, and 4 empty ones: 
 # importdir: with the original text files
-importdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/1.txt files (original)"
+importdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/1.txt files (original)"
 
 # tempdir1: empty (this will hold the tab-delimited files converted from text)
-tempdir1 <- "~/Documents/Rutgers/fatty acids/Jen's sample data/2.csv files (tab-delimited, with header)"
+tempdir1 <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/2.csv files (tab-delimited, with header)"
 
 # tempdir2: empty (this will hold the comma-delimited files converted from 
 #                  tempdir1 with all the header junk still at the top)
-tempdir2 <- "~/Documents/Rutgers/fatty acids/Jen's sample data/3.csv files (comma-delimited, with header)"
+tempdir2 <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/3.csv files (comma-delimited, with header)"
 
 #tempdir3: empty (this will hold csv files with no header but all columns
-tempdir3 <- "~/Documents/Rutgers/fatty acids/Jen's sample data/4.csv files (no header, all columns)"
+tempdir3 <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/4.csv files (no header, all columns)"
 
 #exportdir: empty (this will hold csv files with no header but all columns
-exportdir <- "~/Documents/Rutgers/fatty acids/Jen's sample data/5.csv files (rt, ap only)"
+exportdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/5.csv files (rt, ap only)"
 
 # ------------ #
 # 2. Do the conversions ----
@@ -198,4 +198,4 @@ for(i in 1:length(filelist)) {
 rm(i, filelist)
 
 
-rm(importdir, tempdir1, tempdir2, tempdir3, exportdir)
+rm(importdir, tempdir1, tempdir2, tempdir3, exportdir, nastartrow)
