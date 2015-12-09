@@ -16,12 +16,12 @@
 #rm(list=ls())
 
 # importdir = where you have the files you want to sync
-importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data/GC data-clean/csv files-ALL-trimmed"
-#importdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112/5.csv files (rt, ap only)"
+#importdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay shared/Magdalena Bay data/GC data/GC data-clean/csv files-ALL-trimmed"
+importdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151209/5.csv files (rt, ap only)"
 
 # dataexportdir = where you want to dump the csv end product
-dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/MagBay analysis/data-exported"
-#dataexportdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151112"
+#dataexportdir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/MagBay analysis/data-exported"
+dataexportdir <- "~/Documents/Rutgers/fatty acids/Jen's data 20151209"
 
 # codedir = where you have the 2 functions below stored.
 codedir <- "~/Dropbox/Rutgers-Dropbox/Magdalena Bay not shared/fame_analysis/functions"
@@ -37,7 +37,8 @@ defaultwindow <- 0.8 #defaultwindow ----
 source(paste(codedir, "match.peaks.R", sep="/"))
 
 # set target num peaks (all files should be pared to ~this target number of peaks, to get comparable resolution)
-targetpeaknum <- 50
+#targetpeaknum <- 50
+targetpeaknum <- NA
 
 # ------------------ #
 #  1. Import files, ids, and species -----
@@ -58,8 +59,8 @@ filevec2 <- vector(mode="list", length(filenames))
 
 for(i in 1:(length(filenames))) {
   filevec[[i]] <- read.csv(paste(importdir, filenames[i], sep="/"), 
-                            row.names=NULL, header=TRUE,
-                            stringsAsFactors=FALSE)
+                           row.names=NULL, header=TRUE,
+                           stringsAsFactors=FALSE)
 } 
 rm(i)
 
@@ -101,7 +102,7 @@ for(i in 1:length(filenames)) {
   lessthan15inds <- thisfile$rt < 15
   thisfile <- thisfile[!lessthan15inds,]
   rm(lessthan15inds)
-
+  
   thisfile$ap <- (thisfile$a/sum(thisfile$a))*100 #add area percent column
   
   #renumber the rows!  so you can call the indices later.  
@@ -128,13 +129,13 @@ for(i in 1:length(filenames)) {
   if(palmiticap < 10) {
     #print(paste("  WARNING!: The palmitic peak is only", round(palmiticap, digits=2), "% of area."))
     peakcounts$notes[i]  <- paste("WARNING!: The palmitic peak is only", round(palmiticap, digits=2), "% of area.")
-} #if pap <10
+  } #if pap <10
   if(palmiticrt < 21 | palmiticrt > 23) {
     #print(paste("WARNING!: The palmitic retention time is", palmiticrt, "and not between 21 and 23 minutes."))
     peakcounts$notes[i]  <- paste(peakcounts$notes[i], "WARNING!: The palmitic peak is only", round(palmiticap, digits=2), "% of area.")
   }
   rm(palmiticind, palmiticap)
-           
+  
   #create a column that is distance from palmitic acid
   thisfile$dfp <- thisfile$rt - palmiticrt
   rm(palmiticrt)
@@ -182,12 +183,12 @@ for(i in 1:length(filenames)) {
   #  4. Remove small peaks  ----
   # ------------------ #
   #remove all peaks < peakthreshold, which is set at top
-#  thisfile <- thisfile[thisfile$ap > peakthreshold,]
+  #  thisfile <- thisfile[thisfile$ap > peakthreshold,]
   
   #renumber the rows!  so you can call the indices later.  
-#  rownames(thisfile) <- 1:nrow(thisfile)
+  #  rownames(thisfile) <- 1:nrow(thisfile)
   #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme
-
+  
   # ------------------ #
   #  4. Remove extra peaks in files with a lot of them  ----
   # ------------------ #
@@ -197,23 +198,25 @@ for(i in 1:length(filenames)) {
   
   peakcounts$file_name[i] <- filenames[i]
   peakcounts$num_peaks[i] <- nrow(thisfile)
-
+  
   # we want to get all the files to a similar resolution, to have about the same number of peaks
   # the target number of peaks is set above
-  if(nrow(thisfile)>(1.5*targetpeaknum)){ #only pare peaks if the file has > 1.5*targetnumpeaks
-    #find a threshold that gives us the right number
-    peakthreshold <- sort(thisfile$ap, decreasing=T)[1.5*targetpeaknum] #cutoff is the ap where the peaknum = 1.5*targetnumpeaks
-    numpeaksremoved <- length(thisfile$ap[thisfile$ap<=peakthreshold])
-    thisfile <- thisfile[thisfile$ap >= peakthreshold,] #remove all peaks below that threshold
-    thisfile$ap <- thisfile$ap / sum(thisfile$ap) * 100
-    peakcounts$peak_threshold[i] <- peakthreshold #save the peakthreshold so you can look at it later
-#    #renumber the rows!  so you can call the indices later.  
-    rownames(thisfile) <- 1:nrow(thisfile)
-#    #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme    
-    rm(peakthreshold)
-  } #targetpeaknum
-
- 
+  if(!is.na(targetpeaknum)) { #if you set a targetpeaknum
+    if(nrow(thisfile)>(1.5*targetpeaknum)){ #only pare peaks if the file has > 1.5*targetnumpeaks
+      #find a threshold that gives us the right number
+      peakthreshold <- sort(thisfile$ap, decreasing=T)[1.5*targetpeaknum] #cutoff is the ap where the peaknum = 1.5*targetnumpeaks
+      numpeaksremoved <- length(thisfile$ap[thisfile$ap<=peakthreshold])
+      thisfile <- thisfile[thisfile$ap >= peakthreshold,] #remove all peaks below that threshold
+      thisfile$ap <- thisfile$ap / sum(thisfile$ap) * 100
+      peakcounts$peak_threshold[i] <- peakthreshold #save the peakthreshold so you can look at it later
+      #renumber the rows!  so you can call the indices later.  
+      rownames(thisfile) <- 1:nrow(thisfile)
+      #thank you: http://stackoverflow.com/questions/12505712/renumbering-rows-after-ordering-in-r-programme    
+      rm(peakthreshold)
+    } #1.5*targetpeaknum
+  } #!is.na(targetpeaknum)
+  
+  
   # ------------------ #
   #  5. Now, generate list of all peaks  ----
   # ------------------ #
@@ -259,7 +262,7 @@ for(i in 1:length(filenames)) {
     #  a. Match the peaks to the peak list ----
     thisfile <- match.peaks(thisfile, peaklist)
     
-  #  b. Deal with the unmatched peaks ----
+    #  b. Deal with the unmatched peaks ----
     unmatched <- subset(thisfile, fameid=="")
     unmatchedindices <- as.numeric(rownames(unmatched))
     
@@ -285,7 +288,7 @@ for(i in 1:length(filenames)) {
                                        defaultwindow=defaultwindow)
       rm(unmatchedwithname)
     } #if(nrow(unmatched)!=0)
-  rm(unmatched, unmatchedindices)
+    rm(unmatched, unmatchedindices)
   } #else if filecount > 1
   rm(noname)
   
@@ -442,7 +445,7 @@ write.table(APDFP, paste(dataexportdir, "APDFP.csv", sep="/"), sep=",", na="", r
 
 
 rm(spvec, sp, spcat)
-#rm(alldata, peaklist, APDFP, APDFPt, APDFPtsp, filenames, filevec, filevec2)
-#rm(codedir, dataexportdir, importdir)
+rm(alldata, peaklist, APDFP, APDFPt, APDFPtsp, filenames, filevec, filevec2, peakcounts)
+rm(codedir, dataexportdir, importdir)
 
-#write.csv(sort(unique(spvec)), paste(dataexportdir, "spvec.csv", sep="/"))
+write.csv(sort(unique(spvec)), paste(dataexportdir, "spvec.csv", sep="/"))
